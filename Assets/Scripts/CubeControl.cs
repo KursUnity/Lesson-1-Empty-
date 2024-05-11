@@ -5,9 +5,10 @@ public class CubeControl : MonoBehaviour
     [SerializeField] private CubeExplosion _cubeExplosion;
     [SerializeField] private Camera _camera;
     [SerializeField] private Cube _cubePrefab;
-    [SerializeField] private Ray _ray;
     [SerializeField] private int _minCubeCount;
     [SerializeField] private int _maxCubeCount;
+
+    private Ray _ray;
 
     private float _localScale = 1f;
     private float _scaleDigit = 2f;
@@ -28,9 +29,9 @@ public class CubeControl : MonoBehaviour
             if (Physics.Raycast(_ray, out hit, Mathf.Infinity))
             {
                 Transform objectHit = hit.transform;
-
+                _localScale = hit.transform.localScale.x;
                 TrySpawnCubes(objectHit);
-                _cubeExplosion.Explode();
+                _cubeExplosion.Explode(objectHit);
                 Destroy(hit.transform.gameObject);
             }
         }
@@ -40,12 +41,12 @@ public class CubeControl : MonoBehaviour
     {
         if (IsGetSplitChance())
         {
-            int _random = Random.Range(_minCubeCount, _maxCubeCount);
+            int random = Random.Range(_minCubeCount, _maxCubeCount);
             _localScale /= _scaleDigit;
 
-            while (_random > 0)
+            while (random > 0)
             {
-                _random--;
+                random--;
                 Cube temperaryCube = Instantiate(_cubePrefab, hitObject.position, Quaternion.identity);
                 temperaryCube.transform.localScale = Vector3.one * _localScale;
                 _splitChance /= _splitDigit;

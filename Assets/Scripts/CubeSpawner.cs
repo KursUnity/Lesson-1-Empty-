@@ -1,7 +1,10 @@
 using UnityEngine;
 
-public class CubeControl : MonoBehaviour
+public class CubeSpawner : MonoBehaviour
 {
+    private const int MinSplitNumber = 0;
+    private const int MaxSplitNumber = 100;
+
     [SerializeField] private CubeExplosion _cubeExplosion;
     [SerializeField] private Camera _camera;
     [SerializeField] private Cube _cubePrefab;
@@ -12,12 +15,6 @@ public class CubeControl : MonoBehaviour
 
     private float _localScale = 1f;
     private float _scaleDigit = 2f;
-
-    private int _splitChance = 100;
-    private int _splitDigit = 2;
-    private int _splitRandomNumber;
-    private int _minSplitNumber = 0;
-    private int _maxSplitNumber = 100;
 
     private void Update()
     {
@@ -32,7 +29,7 @@ public class CubeControl : MonoBehaviour
                 _localScale = hit.transform.localScale.x;
                 TrySpawnCubes(objectHit);
                 _cubeExplosion.Explode(objectHit);
-                Destroy(hit.transform.gameObject);
+               // Destroy(hit.transform.gameObject);
             }
         }
     }
@@ -49,7 +46,6 @@ public class CubeControl : MonoBehaviour
                 random--;
                 Cube temperaryCube = Instantiate(_cubePrefab, hitObject.position, Quaternion.identity);
                 temperaryCube.transform.localScale = Vector3.one * _localScale;
-                _splitChance /= _splitDigit;
 
                 SetCubeColors(temperaryCube);
             }
@@ -63,11 +59,12 @@ public class CubeControl : MonoBehaviour
 
     private bool IsGetSplitChance()
     {
-        _splitRandomNumber = Random.Range(_minSplitNumber, _maxSplitNumber);
+        int splitRandomNumber = Random.Range(MinSplitNumber, MaxSplitNumber);
+        int cubeSplitChance = _cubePrefab.TakeSplitChance();
 
-        for (int i = 0; i < _splitChance; i++)
+        for (int i = 0; i < cubeSplitChance; i++)
         {
-            if (i == _splitRandomNumber)
+            if (i == splitRandomNumber)
             {
                 return true;
             }

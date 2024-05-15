@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CubeSpawner : MonoBehaviour
@@ -7,7 +8,6 @@ public class CubeSpawner : MonoBehaviour
 
     [SerializeField] private CubeExplosion _cubeExplosion;
     [SerializeField] private Camera _camera;
-    [SerializeField] private Cube _cubePrefab;
     [SerializeField] private int _minCubeCount;
     [SerializeField] private int _maxCubeCount;
 
@@ -25,30 +25,34 @@ public class CubeSpawner : MonoBehaviour
 
             if (Physics.Raycast(_ray, out hit, Mathf.Infinity))
             {
-                Transform objectHit = hit.transform;
-                _localScale = hit.transform.localScale.x;
-                TrySpawnCubes(objectHit);
-                _cubeExplosion.Explode(objectHit);
-               // Destroy(hit.transform.gameObject);
+                if (hit.collider.TryGetComponent(out Cube cube))
+                {
+                    _localScale = hit.transform.localScale.x;
+                    TrySpawnCubes(cube);
+                    Destroy(cube.gameObject);
+                }
             }
         }
     }
 
-    private void TrySpawnCubes(Transform hitObject)
+    private void TrySpawnCubes(Cube cube)
     {
-        if (IsGetSplitChance())
+        if (IsGetSplitChance(cube))
         {
             int random = Random.Range(_minCubeCount, _maxCubeCount);
             _localScale /= _scaleDigit;
+            List<Cube> cubes = new List<Cube>();
 
-            while (random > 0)
+            for (int i = 0; i < random; i++)
             {
-                random--;
-                Cube temperaryCube = Instantiate(_cubePrefab, hitObject.position, Quaternion.identity);
+                Cube temperaryCube = Instantiate(cube, cube.transform.position, Quaternion.identity);
                 temperaryCube.transform.localScale = Vector3.one * _localScale;
-
+                temperaryCube.TakeSplitChance();
+                cubes.Add(temperaryCube);
                 SetCubeColors(temperaryCube);
             }
+
+            _cubeExplosion.ExplodeCubes(cubes);
         }
     }
 
@@ -57,19 +61,10 @@ public class CubeSpawner : MonoBehaviour
         cube.GetComponent<Renderer>().material.color = new Color(Random.value, Random.value, Random.value);
     }
 
-    private bool IsGetSplitChance()
+    private bool IsGetSplitChance(Cube cube)
     {
         int splitRandomNumber = Random.Range(MinSplitNumber, MaxSplitNumber);
-        int cubeSplitChance = _cubePrefab.TakeSplitChance();
 
-        for (int i = 0; i < cubeSplitChance; i++)
-        {
-            if (i == splitRandomNumber)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return splitRandomNumber <= cube.TakeSplitChance();
     }
 }
